@@ -1,6 +1,9 @@
 "use server";
 import { getCollection } from "@/lib/db";
 import { RegisterFormSchema } from "@/lib/rules";
+import { createSession } from "@/lib/sessions";
+import bcrypt from "bcryptjs";
+import { redirect } from "next/navigation";
 export async function register(state , formData){
  
     const validatedFields = RegisterFormSchema.safeParse({
@@ -28,13 +31,13 @@ export async function register(state , formData){
         };
     }
     // Hash the password
-
+    const hashedPassword = await bcrypt.hash(password, 10);
     //Save the user to the database
-    const results = await userCollection?.insertOne({email, password});
+    const results = await userCollection?.insertOne({email, password : hashedPassword});
 
     //Create a session
+    await createSession(results.insertedId.toString());
 
     //Redirect the user
-    redirect("/dashboard");
-    console.log("results", results);
+    redirect("/dashbord");
 }
